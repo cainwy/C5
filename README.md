@@ -94,13 +94,6 @@ run\tab2.ps1
 run\tab3.ps1 -Ls "1,2,4"
 run\selftest.ps1 -Reps 5
 
-# everything that does not need Fabric
-run\offline_all.ps1
-
-# everything, including the on-chain runs (launched inside WSL)
-run\run_all.ps1
-run\run_all.ps1 -SkipFabric      # off-chain only
-run\run_all.ps1 -WslRoot "/mnt/e/.../实现_C5_FULL_V4.5_PAPER_RELEASE"
 ```
 
 Each script writes JSON and CSV output under `data/<experiment>/`, and a log

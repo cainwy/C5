@@ -1,0 +1,23 @@
+# Generated measurements, figures, build products and trial keys
+/data/
+/figures/
+/bin/
+/blockchain/artifacts/
+/blockchain/third_party/
+/blockchain/caliper/node_modules/
+/blockchain/caliper/reports/
+/blockchain/caliper/.caliper/
+# Local credentials and transient Fabric identity material
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+# Editors / caches
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+.DS_Store

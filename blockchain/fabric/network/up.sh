@@ -52,6 +52,14 @@ fail() { printf '[up][FAIL] %s\n' "$*" >&2; exit 1; }
 
 command -v docker >/dev/null 2>&1 || fail "docker not found"
 [[ -d "$NETWORK_DIR" ]] || fail "test-network not found: $NETWORK_DIR (run bootstrap.sh first)"
+[[ -x "${FABRIC_SAMPLES_DIR}/bin/peer" ]] ||
+  fail "peer CLI not found: ${FABRIC_SAMPLES_DIR}/bin/peer (run bootstrap.sh)"
+[[ -f "${FABRIC_SAMPLES_DIR}/config/core.yaml" ]] ||
+  fail "config/core.yaml not found: ${FABRIC_SAMPLES_DIR}/config (run bootstrap.sh)"
+[[ -f "${BLOCKCHAIN_DIR}/artifacts/c5_l1_507/vk.bin" ]] ||
+  fail "vk.bin missing under blockchain/artifacts/c5_l1_507 (run run/setupgen.ps1)"
+[[ -f "${BLOCKCHAIN_DIR}/artifacts/c5_l1_507/manifest.json" ]] ||
+  fail "manifest.json missing under blockchain/artifacts/c5_l1_507"
 [[ -f "$CCAAS_DIR/Dockerfile" ]] || fail "ccaas Dockerfile not found: $CCAAS_DIR/Dockerfile"
 
 log "fabric=${FABRIC_VERSION} ca=${FABRIC_CA_VERSION} caliper=${CALIPER_VERSION} go=${GO_VERSION}"

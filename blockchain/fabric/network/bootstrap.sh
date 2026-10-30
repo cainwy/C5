@@ -53,6 +53,7 @@ check_tool() {
 log "== tooling =="
 check_tool jq        "jq --version" 1
 check_tool sha256sum "true"         1
+check_tool curl      "curl --version" 1
 check_tool node      "node --version" 0
 check_tool go        "go version"     0
 check_tool docker    "docker --version" 0
@@ -102,19 +103,31 @@ if [[ "$(jq -r '.constraints' "$MANIFEST")" != "891908" || \
 fi
 
 log "== fabric-samples =="
-if [[ -d "$FABRIC_SAMPLES_DIR" ]]; then
+SAMPLES_REF="${FABRIC_SAMPLES_REF:-main}"
+samples_ready() {
+  [[ -x "${FABRIC_SAMPLES_DIR}/bin/peer" ]] &&
+    [[ -f "${FABRIC_SAMPLES_DIR}/config/core.yaml" ]] &&
+    [[ -f "${FABRIC_SAMPLES_DIR}/test-network/network.sh" ]]
+}
+
+if samples_ready; then
   log "reuse existing fabric-samples: $FABRIC_SAMPLES_DIR"
 elif [[ "$NO_CLONE" == "1" ]]; then
-  warn "fabric-samples missing and --no-clone given: $FABRIC_SAMPLES_DIR"
+  warn "fabric-samples incomplete and --no-clone given: $FABRIC_SAMPLES_DIR"
 else
-  mkdir -p "$(dirname "$FABRIC_SAMPLES_DIR")"
-  log "cloning hyperledger/fabric-samples @ v${FABRIC_VERSION} (depth 1) -> $FABRIC_SAMPLES_DIR"
-  if ! git clone --depth 1 --branch "v${FABRIC_VERSION}" \
-        https://github.com/hyperledger/fabric-samples.git "$FABRIC_SAMPLES_DIR"; then
-    fail "git clone failed. Clone fabric-samples manually and re-run with --no-clone"
+  if [[ ! -f "${FABRIC_SAMPLES_DIR}/test-network/network.sh" ]]; then
+    mkdir -p "$(dirname "$FABRIC_SAMPLES_DIR")"
+    git clone --depth 1 --branch "$SAMPLES_REF" \
+      https://github.com/hyperledger/fabric-samples.git "$FABRIC_SAMPLES_DIR" \
+      || fail "git clone failed; clone fabric-samples manually and re-run with --no-clone"
   fi
-  log "checkout: $(git -C "$FABRIC_SAMPLES_DIR" rev-parse --short HEAD)"
-  warn "test-network also needs bin/ and config/: run install-fabric.sh binary in that directory"
+  # install-fabric.sh lives in the fabric repository, not in fabric-samples.
+  SRC="https://raw.githubusercontent.com/hyperledger/fabric/v${FABRIC_VERSION}/scripts/install-fabric.sh"
+  TMP="$(mktemp -d)/install-fabric.sh"
+  curl -sSL --fail "$SRC" -o "$TMP" || fail "cannot download install-fabric.sh"
+  ( cd "$FABRIC_SAMPLES_DIR" && bash "$TMP" \
+      --fabric-version "${FABRIC_VERSION}" --ca-version "${FABRIC_CA_VERSION}" binary ) \
+    || fail "install-fabric.sh binary failed"
 fi
 
 log "== summary =="
